@@ -1,0 +1,52 @@
+import { Inngest } from "inngest";
+import User from "../models/User";
+
+//client to create and send events
+export const inngest = new Inngest({ id: "movie-ticket-booking" });
+
+//function to save user data to the database
+const syncUserCreation = inngest.createFunction(
+    {id: 'sync-user-from-clerk'},
+    {event: 'clerk/user.created'},
+    async ({ event })=> {
+        const {id, first_name, last_name, email_addresses, imageURL} = event.data 
+        const userData = {
+            _id: id,
+            email: email_addresses[0].email_address,
+            name: first_name + " " + last_name,
+            image: imageURL
+        }
+        await User.create(userData)
+    }
+)
+
+//function to delete user from database
+const syncUserDeletion = inngest.createFunction(
+    {id: 'delete-user-with-clerk'},
+    {event: 'clerk/user.deleted'},
+    async ({ event })=> {
+        
+        const {id} = event.data
+        await User.findByIdAndDelete(id)
+    }
+)
+
+//function to update userdata in the database
+const syncUseraupdation = inngest.createFunction(
+    {id: 'update-user-from-clerk'},
+    {event: 'clerk/user.updated'},
+    async ({ event })=> {        
+        const {id, first_name, last_name, email_addresses, imageURL} = event.data
+        const userData = {
+            _id: id,
+            email: email_addresses[0].email_address,
+            name: first_name + " " + last_name,
+            image: imageURL
+        }
+        await User.findByIdAndUpdate(id, userData)
+
+    }
+)
+
+
+export const functions = [syncUserCreation, syncUserDeletion, syncUseraupdation];
