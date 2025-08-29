@@ -8,9 +8,7 @@ import { clerkClient, getAuth } from "@clerk/express";
 export const isAdmin= async (req, res)=> {
 
     try {
-        const { userId, sessionId } = getAuth(req);
-
-        console.log("Decoded Clerk Auth:", { userId, sessionId });
+         const { userId } = req.auth();
 
         if (!userId) {
             console.log('No userId found'); 
